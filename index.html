@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>과학 논쟁(SSI) 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        /* Custom Scrollbar for better aesthetics */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-blue-600">
+                <i class="ph-fill ph-flask text-2xl"></i>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900">과학 논쟁(SSI) 튜터</h1>
+            </div>
+            <div class="text-sm text-slate-500 font-medium">
+                2022 개정 교육과정 연계
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-6">
+        
+        <!-- Left Column: Input Form -->
+        <div class="w-full lg:w-1/3 flex flex-col gap-6">
+            <div class="glass-panel rounded-2xl p-6">
+                <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <i class="ph-duotone ph-sliders text-blue-500 text-xl"></i>
+                    주제 설정
+                </h2>
+
+                <!-- School Level -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">학교급</label>
+                    <div class="flex bg-slate-100 p-1 rounded-lg">
+                        <button class="school-btn flex-1 py-2 text-sm font-medium rounded-md bg-white shadow-sm text-slate-900 transition-all" data-level="middle">중학교</button>
+                        <button class="school-btn flex-1 py-2 text-sm font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all" data-level="high">고등학교</button>
+                    </div>
+                </div>
+
+                <!-- Subject -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">과목 / 영역</label>
+                    <select id="subjectSelect" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+
+                <!-- Difficulty -->
+                <div class="mb-5">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">난이도</label>
+                    <div class="flex bg-slate-100 p-1 rounded-lg">
+                        <button class="diff-btn flex-1 py-2 text-sm font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all" data-diff="하">하 (기초)</button>
+                        <button class="diff-btn flex-1 py-2 text-sm font-medium rounded-md bg-white shadow-sm text-slate-900 transition-all" data-diff="중">중 (표준)</button>
+                        <button class="diff-btn flex-1 py-2 text-sm font-medium rounded-md text-slate-500 hover:text-slate-700 transition-all" data-diff="상">상 (심화)</button>
+                    </div>
+                    <p id="diffDesc" class="text-xs text-slate-500 mt-2">해당 학년군 교과서 수준의 과학 개념을 바탕으로 논리를 전개합니다.</p>
+                </div>
+
+                <!-- Keyword -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">핵심 키워드 또는 성취기준</label>
+                    <input type="text" id="keywordInput" placeholder="예: 유전자 가위, 기후위기, 인공지능..." class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all">
+                    
+                    <!-- Suggested Tags -->
+                    <div class="flex flex-wrap gap-2 mt-3" id="tagContainer">
+                        <button class="tag-btn text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded-full hover:bg-blue-100 transition">#탄소중립</button>
+                        <button class="tag-btn text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded-full hover:bg-blue-100 transition">#우주개발</button>
+                        <button class="tag-btn text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded-full hover:bg-blue-100 transition">#유전자편집</button>
+                        <button class="tag-btn text-xs bg-blue-50 text-blue-600 border border-blue-100 px-2 py-1 rounded-full hover:bg-blue-100 transition">#동물실험</button>
+                    </div>
+                </div>
+
+                <button id="generateBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-sparkle"></i>
+                    논쟁 질문 및 논리 생성
+                </button>
+            </div>
+            
+            <!-- Message Box for Errors -->
+            <div id="messageBox" class="hidden rounded-lg p-4 text-sm"></div>
+        </div>
+
+        <!-- Right Column: Output Area -->
+        <div class="w-full lg:w-2/3 flex flex-col h-full min-h-[600px]">
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="glass-panel rounded-2xl flex-grow flex flex-col items-center justify-center text-center p-8 border border-dashed border-slate-300">
+                <div class="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                    <i class="ph-duotone ph-scales text-3xl text-blue-500"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-800 mb-2">주제를 입력하여 논쟁을 시작하세요</h3>
+                <p class="text-slate-500 text-sm max-w-md">
+                    2022 개정 과학과 교육과정에 기반하여, 학생들의 비판적 사고를 돕는 찬성/반대 논리를 AI가 구조화하여 제공합니다.
+                </p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="glass-panel rounded-2xl flex-grow flex flex-col items-center justify-center text-center p-8 hidden">
+                <div class="loader mb-4"></div>
+                <h3 class="text-lg font-medium text-slate-700">교육과정 데이터를 분석하며 논리를 생성 중입니다...</h3>
+                <p class="text-slate-400 text-sm mt-2">약 5~10초 정도 소요될 수 있습니다.</p>
+            </div>
+
+            <!-- Results State -->
+            <div id="resultState" class="hidden flex-grow flex flex-col gap-4">
+                
+                <!-- Topic Header -->
+                <div class="glass-panel rounded-2xl p-6 border-l-4 border-l-blue-500">
+                    <div class="flex flex-wrap gap-2 mb-3" id="resultTags">
+                        <!-- Tags injected by JS -->
+                    </div>
+                    <h2 id="resultQuestion" class="text-2xl font-bold text-slate-900 leading-snug">
+                        <!-- Question injected by JS -->
+                    </h2>
+                </div>
+
+                <!-- Pro & Con Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow">
+                    
+                    <!-- Pro (찬성) -->
+                    <div class="glass-panel rounded-2xl border-t-4 border-t-blue-500 overflow-hidden flex flex-col">
+                        <div class="bg-blue-50/50 px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+                            <h3 class="font-bold text-blue-800 text-lg flex items-center gap-2">
+                                <i class="ph-fill ph-thumbs-up text-blue-500"></i> 찬성 (Pro)
+                            </h3>
+                        </div>
+                        <div class="p-6 flex-grow flex flex-col gap-4 bg-white/50">
+                            <div class="bg-blue-50 p-4 rounded-xl text-blue-900 font-medium text-sm leading-relaxed border border-blue-100" id="proClaim">
+                                <!-- Claim injected by JS -->
+                            </div>
+                            <div id="proArguments" class="flex flex-col gap-4 mt-2">
+                                <!-- Arguments injected by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Con (반대) -->
+                    <div class="glass-panel rounded-2xl border-t-4 border-t-red-500 overflow-hidden flex flex-col">
+                        <div class="bg-red-50/50 px-6 py-4 border-b border-red-100 flex items-center justify-between">
+                            <h3 class="font-bold text-red-800 text-lg flex items-center gap-2">
+                                <i class="ph-fill ph-thumbs-down text-red-500"></i> 반대 (Con)
+                            </h3>
+                        </div>
+                        <div class="p-6 flex-grow flex flex-col gap-4 bg-white/50">
+                            <div class="bg-red-50 p-4 rounded-xl text-red-900 font-medium text-sm leading-relaxed border border-red-100" id="conClaim">
+                                <!-- Claim injected by JS -->
+                            </div>
+                            <div id="conArguments" class="flex flex-col gap-4 mt-2">
+                                <!-- Arguments injected by JS -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Data & State
+        const subjects = {
+            middle: ["과학과 사회", "운동과 에너지", "물질", "생명", "지구와 우주"],
+            high: ["통합과학1·2", "과학탐구실험1·2", "물리학", "화학", "생명과학", "지구과학", "기후변화와 환경생태", "융합과학 탐구"]
+        };
+        
+        let currentState = {
+            level: 'middle', // 'middle' or 'high'
+            subject: '과학과 사회',
+            difficulty: '중',
+            keyword: ''
+        };
+
+        const difficultyDescriptions = {
+            '하': '초등 고학년~중학교 1학년도 이해할 수 있는 쉬운 비유와 직관적 일상 사례를 중심으로 구성합니다.',
+            '중': '해당 학년군 교과서 수준의 과학 개념을 명확히 포함하여 객관적 근거를 바탕으로 논리를 전개합니다.',
+            '상': '심화 과학 원리, 복합적인 사회·윤리적 딜레마를 결합하고 예상 반론 및 재반론 구조를 포함합니다.'
+        };
+
+        // DOM Elements
+        const schoolBtns = document.querySelectorAll('.school-btn');
+        const subjectSelect = document.getElementById('subjectSelect');
+        const diffBtns = document.querySelectorAll('.diff-btn');
+        const diffDesc = document.getElementById('diffDesc');
+        const keywordInput = document.getElementById('keywordInput');
+        const tagBtns = document.querySelectorAll('.tag-btn');
+        const generateBtn = document.getElementById('generateBtn');
+        const messageBox = document.getElementById('messageBox');
+
+        // Output DOM Elements
+        const emptyState = document.getElementById('emptyState');
+        const loadingState = document.getElementById('loadingState');
+        const resultState = document.getElementById('resultState');
+        
+        // Initialization
+        function init() {
+            updateSubjectDropdown();
+            
+            // Event Listeners
+            schoolBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // UI Update
+                    schoolBtns.forEach(b => {
+                        b.classList.remove('bg-white', 'shadow-sm', 'text-slate-900');
+                        b.classList.add('text-slate-500');
+                    });
+                    e.target.classList.remove('text-slate-500');
+                    e.target.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
+                    
+                    // State Update
+                    currentState.level = e.target.dataset.level;
+                    updateSubjectDropdown();
+                });
+            });
+
+            diffBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // UI Update
+                    diffBtns.forEach(b => {
+                        b.classList.remove('bg-white', 'shadow-sm', 'text-slate-900');
+                        b.classList.add('text-slate-500');
+                    });
+                    e.target.classList.remove('text-slate-500');
+                    e.target.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
+                    
+                    // State Update
+                    currentState.difficulty = e.target.dataset.diff;
+                    diffDesc.textContent = difficultyDescriptions[currentState.difficulty];
+                });
+            });
+
+            subjectSelect.addEventListener('change', (e) => {
+                currentState.subject = e.target.value;
+            });
+
+            tagBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const tagText = e.target.textContent.replace('#', '');
+                    keywordInput.value = tagText;
+                });
+            });
+
+            generateBtn.addEventListener('click', handleGenerate);
+        }
+
+        function updateSubjectDropdown() {
+            subjectSelect.innerHTML = '';
+            const opts = subjects[currentState.level];
+            opts.forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt;
+                el.textContent = opt;
+                subjectSelect.appendChild(el);
+            });
+            currentState.subject = opts[0];
+        }
+
+        function showMessage(msg, isError = true) {
+            messageBox.textContent = msg;
+            messageBox.className = `mt-4 rounded-lg p-4 text-sm ${isError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'}`;
+            messageBox.classList.remove('hidden');
+        }
+
+        function hideMessage() {
+            messageBox.classList.add('hidden');
+        }
+
+        // LLM Integration
+        async function handleGenerate() {
+            const keyword = keywordInput.value.trim();
+            if (!keyword) {
+                showMessage("핵심 키워드 또는 성취기준을 입력해주세요.");
+                keywordInput.focus();
+                return;
+            }
+            
+            hideMessage();
+            currentState.keyword = keyword;
+            
+            // UI State Transition
+            emptyState.classList.add('hidden');
+            resultState.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> 생성 중...';
+
+            try {
+                await fetchDebateData();
+            } catch (error) {
+                console.error("API 호출 오류:", error);
+                showMessage("오류가 발생했습니다. 잠시 후 다시 시도해주세요. (" + error.message + ")");
+                loadingState.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="ph-bold ph-sparkle"></i> 논쟁 질문 및 논리 생성';
+            }
+        }
+
+        async function fetchDebateData() {
+            const levelText = currentState.level === 'middle' ? '중학교' : '고등학교';
+            
+            // System Prompt
+            const systemPrompt = `당신은 대한민국 2022 개정 과학과 교육과정에 정통한 최고의 과학교육 전문가입니다. 
+학생들의 과학적 소양(Scientific Literacy)과 민주시민 의식을 기르기 위한 SSI(사회과학적 쟁점) 토론 자료를 생성해야 합니다.
+반드시 중립적인 입장에서 찬성(Pro)과 반대(Con) 양측의 논리를 객관적이고 균형 있게 구성하세요.`;
+
+            // User Prompt defining the logic based on difficulty
+            const userPrompt = `다음 조건에 맞춰 SSI(사회과학적 쟁점) 논쟁 주제와 찬반 논리를 작성해주세요.
+
+[조건]
+- 학교급: ${levelText}
+- 과목/영역: ${currentState.subject}
+- 난이도: ${currentState.difficulty}
+- 핵심 주제/키워드: ${currentState.keyword}
+
+[난이도별 지침]
+- 난이도가 '하'인 경우: 일상생활의 사례 위주로, 비유를 사용하여 매우 쉬운 어휘로 설명하세요. 각 입장의 근거는 직관적이어야 합니다.
+- 난이도가 '중'인 경우: 해당 과목의 교과서에서 다루는 과학적 원리를 근거(Evidence)로 활용하세요. 논리적이고 표준적인 토론에 적합하게 작성하세요.
+- 난이도가 '상'인 경우: 최신 과학기술 동향, 복합적인 사회/법적/윤리적 딜레마를 포함하세요. 또한 근거 설명 시 상대방의 반론을 예상하고 이를 방어하는 내용(재반론)을 반드시 일부 포함하여 깊이를 더하세요.
+
+결과는 반드시 지정된 JSON 스키마에 맞게 출력하세요.`;
+
+            // Payload for Structured Output
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            question: { type: "STRING", description: "학생들에게 던질 핵심 논쟁적 열린 질문 (1개)" },
+                            achievement_standards: { 
+                                type: "ARRAY", 
+                                items: { type: "STRING" }, 
+                                description: "관련된 2022 개정 교육과정 성취기준 내용 요소 또는 핵심 아이디어 (2~3개 태그 형태, 예: '에너지 전환', '과학기술과 윤리')" 
+                            },
+                            pro_stance: {
+                                type: "OBJECT",
+                                properties: {
+                                    claim: { type: "STRING", description: "찬성측을 대표하는 강력한 핵심 주장 1문장" },
+                                    arguments: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                title: { type: "STRING", description: "근거 소제목" },
+                                                content: { type: "STRING", description: "과학적 원리 및 사회적 관점을 포함한 구체적인 근거 설명" }
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            con_stance: {
+                                type: "OBJECT",
+                                properties: {
+                                    claim: { type: "STRING", description: "반대측을 대표하는 강력한 핵심 주장 1문장" },
+                                    arguments: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                title: { type: "STRING", description: "근거 소제목" },
+                                                content: { type: "STRING", description: "과학적 원리 및 사회적 관점을 포함한 구체적인 근거 설명" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        required: ["question", "achievement_standards", "pro_stance", "con_stance"]
+                    }
+                }
+            };
+
+            const apiKey = ""; // Platform will automatically inject the key
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`API Request failed: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.candidates && result.candidates[0].content && result.candidates[0].content.parts) {
+                const jsonText = result.candidates[0].content.parts[0].text;
+                const data = JSON.parse(jsonText);
+                renderResults(data);
+            } else {
+                throw new Error("예상치 못한 API 응답 구조입니다.");
+            }
+        }
+
+        // Render Data to UI
+        function renderResults(data) {
+            // Update UI State
+            loadingState.classList.add('hidden');
+            resultState.classList.remove('hidden');
+
+            // Set Header Information
+            document.getElementById('resultQuestion').textContent = data.question;
+            
+            const tagsContainer = document.getElementById('resultTags');
+            tagsContainer.innerHTML = '';
+            
+            // Add Context Tags
+            const contextTag = document.createElement('span');
+            const levelText = currentState.level === 'middle' ? '중학교' : '고등학교';
+            contextTag.className = 'text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md border border-slate-200';
+            contextTag.textContent = `${levelText} ${currentState.subject} | 난이도: ${currentState.difficulty}`;
+            tagsContainer.appendChild(contextTag);
+
+            // Add Achievement Standard Tags
+            data.achievement_standards.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'text-xs font-medium bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100';
+                span.textContent = `#${tag}`;
+                tagsContainer.appendChild(span);
+            });
+
+            // Set Pro Stance
+            document.getElementById('proClaim').innerHTML = `<strong>[핵심 주장]</strong> ${data.pro_stance.claim}`;
+            const proArgsContainer = document.getElementById('proArguments');
+            proArgsContainer.innerHTML = '';
+            data.pro_stance.arguments.forEach((arg, index) => {
+                proArgsContainer.innerHTML += `
+                    <div class="mb-2">
+                        <h4 class="text-sm font-bold text-blue-900 mb-1 flex items-center gap-1.5">
+                            <span class="bg-blue-100 text-blue-800 text-[10px] w-4 h-4 rounded-full flex items-center justify-center">${index + 1}</span>
+                            ${arg.title}
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed pl-5">${arg.content}</p>
+                    </div>
+                `;
+            });
+
+            // Set Con Stance
+            document.getElementById('conClaim').innerHTML = `<strong>[핵심 주장]</strong> ${data.con_stance.claim}`;
+            const conArgsContainer = document.getElementById('conArguments');
+            conArgsContainer.innerHTML = '';
+            data.con_stance.arguments.forEach((arg, index) => {
+                conArgsContainer.innerHTML += `
+                    <div class="mb-2">
+                        <h4 class="text-sm font-bold text-red-900 mb-1 flex items-center gap-1.5">
+                            <span class="bg-red-100 text-red-800 text-[10px] w-4 h-4 rounded-full flex items-center justify-center">${index + 1}</span>
+                            ${arg.title}
+                        </h4>
+                        <p class="text-sm text-slate-700 leading-relaxed pl-5">${arg.content}</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Run
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
